@@ -1,7 +1,7 @@
 import App from 'next/app'
 import { TinaCMS, TinaProvider } from 'tinacms'
 import { GithubClient, TinacmsGithubProvider, GithubMediaStore } from 'react-tinacms-github'
-
+import { CustomGithubProvider } from './extended/CustomGithubProvider'
 export default class Site extends App {
   cms: TinaCMS
 
@@ -13,8 +13,7 @@ export default class Site extends App {
       authCallbackRoute: '/api/create-github-access-token',
       clientId: process.env.GITHUB_CLIENT_ID,
       baseRepoFullName: process.env.REPO_FULL_NAME, // e.g: tinacms/tinacms.org,
-      baseBranch: process.env.BASE_BRANCH, // e.g. 'master' or 'main' on newer repos
-      authScope: 'repo'
+      baseBranch: process.env.BASE_BRANCH // e.g. 'master' or 'main' on newer repos
     })
 
     /**
@@ -47,7 +46,7 @@ export default class Site extends App {
        * 5. Wrap the page Component with the Tina and Github providers
        */
       <TinaProvider cms={this.cms}>
-        <TinacmsGithubProvider
+        <CustomGithubProvider
           onLogin={onLogin}
           onLogout={onLogout}
           error={pageProps.error}
@@ -57,13 +56,14 @@ export default class Site extends App {
            */}
           <EditLink cms={this.cms} />
           <Component {...pageProps} />
-        </TinacmsGithubProvider>
+        </CustomGithubProvider>
       </TinaProvider>
     )
   }
 }
 
 const onLogin = async () => {
+  console.log("Logged-in")
   const token = localStorage.getItem('tinacms-github-token') || null
   const headers = new Headers()
 
@@ -79,6 +79,7 @@ const onLogin = async () => {
 }
 
 const onLogout = () => {
+  console.log("Logged-out")
   return fetch(`/api/reset-preview`).then(() => {
     window.location.reload()
   })
